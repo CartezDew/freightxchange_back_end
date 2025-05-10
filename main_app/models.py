@@ -47,4 +47,3 @@ class Offer(models.Model):
     
     def __str__(self):
         return f'Offer {self.id} for load {self.load.id}'
-
