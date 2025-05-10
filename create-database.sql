@@ -1,5 +1,5 @@
 CREATE DATABASE freightxchange;
 
-CREATE USER freightxchange_admin WITH PASSWORD 'password';
+CREATE USER fx_admin WITH PASSWORD 'password';
 
-GRANT ALL PRIVILEGES ON DATABASE freightxchange TO freightxchange_admin;
+GRANT ALL PRIVILEGES ON DATABASE freightxchange TO fx_admin;

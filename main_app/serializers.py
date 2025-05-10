@@ -1,0 +1,42 @@
+from rest_framework import serializers
+from django.contrib.auth.models import User
+from .models import CarrierProfile, BrokerProfile, Load, Offer
+
+class UserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'email', 'password')
+
+    def create(self, validated_data):
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            email=validated_data['email'],
+            password=validated_data['password']
+        )
+        # You could auto-create one or both profile types here (optional)
+        # CarrierProfile.objects.create(user=user) or BrokerProfile.objects.create(user=user)
+        return user
+
+class CarrierProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CarrierProfile
+        fields = '__all__'
+
+class BrokerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BrokerProfile
+        fields = '__all__'
+
+class LoadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Load
+        fields = '__all__'
+        read_only_fields = ['broker']
+
+class OfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Offer
+        fields = '__all__'
+        read_only_fields = ['carrier']
