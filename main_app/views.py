@@ -1,11 +1,11 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, serializers
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .serializers import UserSerializer
+from .models import BrokerProfile, CarrierProfile, Offer, Load
+from .serializers import UserSerializer, LoadSerializer, OfferSerializer, CarrierProfileSerializer, BrokerProfileSerializer
 
 class Landing(APIView):
     def get(self, request):
@@ -13,25 +13,45 @@ class Landing(APIView):
         return Response(content)
     
 #User Registration 
+class CreateUserView(generics.CreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        user = User.objects.get(username=response.data['username'])
+
+        # Automatically create profile (customize based on role input)
+        role = request.data.get('role')  # 'carrier' or 'broker'
+        if role == 'carrier':
+            CarrierProfile.objects.create(user=user)
+        elif role == 'broker':
+            BrokerProfile.objects.create(user=user)
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            'refresh': str(refresh),
+            'access': str(refresh.access_token),
+            'user': response.data
+        })
         
         
-#User Login
-# class LoginView(APIView): 
-#     permission_classes = [permissions.AllowAny]
+# User Login
+class LoginView(APIView): 
+    permission_classes = [permissions.AllowAny]
     
-#     def post(self, request):
-#         username = request.data.get('username')
-#         password = request.data.get('password')
-#         user = authenticate(username=username, password=password)
-#         if user: 
-#             refresh = RefreshToken.for_user(user)
-#             return Response({
-#                 'refresh': str(refresh),
-#                 'access': str(refresh.access_token),
-#                 'user': UserSerializer(user).data
-#             })
-#         return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        user = authenticate(username=username, password=password)
+        if user: 
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'user': UserSerializer(user).data
+            })
+        return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 # class VerifyUserView(APIView):
 #     permission_classes = [permissions.IsAuthenticated]
@@ -44,16 +64,40 @@ class Landing(APIView):
 #             'access': str(refresh.access_token),
 #             'user': UserSerializer(user).data
 #         })
+
+class CarrierProfileDetailView(generics.RetrieveUpdateAPIView):
+    queryset = CarrierProfile.objects.all()
+    serializer_class = CarrierProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+class BrokerProfileDetailView(generics.RetrieveUpdateAPIView):
+    queryset = BrokerProfile.objects.all()
+    serializer_class = BrokerProfileSerializer
+    permission_classes = [permissions.IsAuthenticated]
         
-# class LoadList(generics.ListCreateAPIView):
-#     serializer_class = LoadSerializer
-#     permissions_classes = [permissions.IsAuthenticated]
+class LoadListCreateView(generics.ListCreateAPIView):
+    queryset = Load.objects.all()
+    serializer_class = LoadSerializer
+    permissions_classes = [permissions.IsAuthenticated]
     
-#     def get_queryset(self):
-#         user = self.request.user
-#         return Load.objects.filter(user=user)
+    def perform_create(self, serializer):
+        try:
+            broker_profile = self.request.user.broker_profile
+        except BrokerProfile.DoesNotExist:
+            raise serializers.ValidationError("No broker profile found for this user.")
+        serializer.save(broker=broker_profile)
     
-# class LoadDetail(generics.RetrieveUpddateDestroyAPIView):
+    # def perform_create(self, serializer):
+    #   serializer.save(user=self.request.user)
+ 
+class LoadDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Load.objects.all()
+    serializer_class = LoadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+
+          
+# class LoadDetailView(generics.RetrieveUpddateDestroyAPIView):
 #     serializer_class = LoadSerializer 
 #     lookup_field = 'id'
     
@@ -84,5 +128,22 @@ class Landing(APIView):
 #             raise PermissionDenied({"message": "You do not have permission to delete this Load."})
 #         instance.delete()
         
-# class 
+class OfferListCreateView(generics.ListCreateAPIView):
+    queryset = Offer.objects.all()
+    serializer_class = OfferSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+class OfferDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Offer.objects.all()
+    serializer_class = OfferSerializer
+    permission_classes = [permissions.IsAuthenticated]
     
+    def perform_create(self, serializer):
+        try:
+            carrier_profile = self.request.user.carrier_profile
+        except CarrierProfile.DoesNotExist:
+            raise serializers.ValidationError("No carrier profile found for this user.")
+        serializer.save(carrier=carrier_profile)
