@@ -3,7 +3,7 @@ from django.db import models
 # from datetime import date
       
 class CarrierProfile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='carrier_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='carrier_profile')
     company_name = models.CharField(max_length=100)
     license_id = models.CharField(max_length=50)
     authority_id = models.CharField(max_length=50)
@@ -13,7 +13,7 @@ class CarrierProfile(models.Model):
         return f"Carrier profile: {self.user.username}"
       
 class BrokerProfile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='broker_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='broker_profile')
     company_name = models.CharField(max_length=100)
     policy_id = models.CharField(max_length=50)
     authority_id = models.CharField(max_length=50)

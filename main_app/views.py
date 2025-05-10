@@ -68,11 +68,13 @@ class LoginView(APIView):
 class CarrierProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = CarrierProfile.objects.all()
     serializer_class = CarrierProfileSerializer
+    lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated]
 
 class BrokerProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = BrokerProfile.objects.all()
     serializer_class = BrokerProfileSerializer
+    lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated]
         
 class LoadListCreateView(generics.ListCreateAPIView):
@@ -93,6 +95,7 @@ class LoadListCreateView(generics.ListCreateAPIView):
 class LoadDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Load.objects.all()
     serializer_class = LoadSerializer
+    lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated]
     
 
@@ -139,6 +142,7 @@ class OfferListCreateView(generics.ListCreateAPIView):
 class OfferDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Offer.objects.all()
     serializer_class = OfferSerializer
+    lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated]
     
     def perform_create(self, serializer):
