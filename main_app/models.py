@@ -35,8 +35,8 @@ class Load(models.Model):
     delivery_date = models.DateField()
     commodity = models.CharField(max_length=255)
     
-def __str__(self):
-        return f'Load for {self.user.username} - {self.pickup_city} → {self.delivery_city}'
+    def __str__(self):
+            return f'Load for {self.user.username} - {self.pickup_city} → {self.delivery_city}'
     
 class Offer(models.Model):
     carrier = models.ForeignKey(CarrierProfile, on_delete=models.CASCADE, related_name='offers')

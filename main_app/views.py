@@ -7,6 +7,31 @@ from django.contrib.auth.models import User
 from .models import BrokerProfile, CarrierProfile, Offer, Load
 from .serializers import UserSerializer, LoadSerializer, OfferSerializer, CarrierProfileSerializer, BrokerProfileSerializer
 
+
+
+
+
+
+class IsCarrierOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(request.user, 'carrier_profile'):
+            return False
+        return obj.id == request.user.carrier_profile.id
+
+
+class IsBrokerOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if not hasattr(request.user, 'broker_profile'):
+            return False
+        return obj.id == request.user.broker_profile.id
+
+
+
+
+
+
+
+
 class Landing(APIView):
     def get(self, request):
         content = {'message': 'Welcome to FreightXchange api home route!'}
@@ -69,18 +94,20 @@ class CarrierProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = CarrierProfile.objects.all()
     serializer_class = CarrierProfileSerializer
     lookup_field = 'id'
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsCarrierOwner]
 
 class BrokerProfileDetailView(generics.RetrieveUpdateAPIView):
-    queryset = BrokerProfile.objects.all()
     serializer_class = BrokerProfileSerializer
-    lookup_field = 'id'
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsBrokerOwner]
+
+    def get_object(self):
+        return self.request.user.broker_profile
+
         
 class LoadListCreateView(generics.ListCreateAPIView):
     queryset = Load.objects.all()
     serializer_class = LoadSerializer
-    permissions_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
     
     def perform_create(self, serializer):
         try:
