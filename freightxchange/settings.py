@@ -114,6 +114,7 @@ DATABASES = {
         'NAME': 'freightxchange',
         # 'USER': 'fx_admin',
         # 'PASSWORD': 'password'
+        # 'CONN_MAX_AGE': 60, 
     }
 }
 
