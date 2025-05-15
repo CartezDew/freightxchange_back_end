@@ -31,32 +31,11 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
 
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
-    pickupCity = serializers.CharField(source='pickup_city')
-    pickupState = serializers.CharField(source='pickup_state')
-    deliveryCity = serializers.CharField(source='delivery_city')
-    deliveryState = serializers.CharField(source='delivery_state')
-    equipmentRequirements = serializers.CharField(source='equipment_requirements')
-    pickupDate = serializers.DateField(source='pickup_date')
-    deliveryDate = serializers.DateField(source='delivery_date')
 
     class Meta:
         model = Load
-        fields = [
-            'id',
-            'company_name',
-            'pickupCity',
-            'pickupState',
-            'deliveryCity',
-            'deliveryState',
-            'rate',
-            'equipmentRequirements',
-            'pickupDate',
-            'deliveryDate',
-            'commodity',
-            'broker',  
-        ]
+        fields = '__all__'
         read_only_fields = ['broker']
-
 
 class OfferSerializer(serializers.ModelSerializer):
     class Meta:
