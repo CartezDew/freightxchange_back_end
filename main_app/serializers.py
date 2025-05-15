@@ -37,7 +37,7 @@ class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = '__all__'
-        read_only_fields = ['carrier']
+        read_only_fields = ['carrier', 'load', 'submitted_at', 'accepted']
 
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
