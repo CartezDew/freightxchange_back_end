@@ -17,6 +17,11 @@ class IsBrokerOwner(permissions.BasePermission):
         return hasattr(request.user, 'broker_profile') and obj.id == request.user.broker_profile.id
 
 
+
+class IsCarrierOfferOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return hasattr(request.user, 'carrier_profile') and obj.carrier == request.user.carrier_profile
+
 class Landing(APIView):
     def get(self, request):
         return Response({'message': 'Welcome to FreightXchange api home route!'})
@@ -122,4 +127,4 @@ class OfferDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Offer.objects.all()
     serializer_class = OfferSerializer
     lookup_field = 'id'
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated,IsCarrierOfferOwner]
