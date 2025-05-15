@@ -38,7 +38,7 @@ class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = '__all__'
-        read_only_fields = ['carrier']
+        read_only_fields = ['carrier', 'load', 'submitted_at', 'accepted']
 
     def get_broker_company(self, obj):
         # Traverse: Offer -> Load -> Broker -> company_name
