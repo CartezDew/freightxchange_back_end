@@ -5,9 +5,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import BrokerProfile, CarrierProfile, Offer, Load
-from .serializers import UserSerializer, LoadSerializer, OfferSerializer, CarrierProfileSerializer, BrokerProfileSerializer
+from .serializers import (
+    UserSerializer,
+    LoadSerializer,
+    OfferSerializer,
+    CarrierProfileSerializer,
+    BrokerProfileSerializer,
+)
 
-
+# Custom permissions
 class IsCarrierOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return hasattr(request.user, 'carrier_profile') and obj.id == request.user.carrier_profile.id
@@ -16,16 +22,23 @@ class IsBrokerOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return hasattr(request.user, 'broker_profile') and obj.id == request.user.broker_profile.id
 
-
-
 class IsCarrierOfferOwner(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return hasattr(request.user, 'carrier_profile') and obj.carrier == request.user.carrier_profile
 
+class IsBrokerOrCarrierOwner(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        user = request.user
+        if hasattr(user, 'carrier_profile') and obj.carrier == user.carrier_profile:
+            return True
+        if hasattr(user, 'broker_profile') and obj.load.broker == user.broker_profile:
+            return True
+        return False
+
+# API Views
 class Landing(APIView):
     def get(self, request):
         return Response({'message': 'Welcome to FreightXchange api home route!'})
-
 
 class CreateUserView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -47,7 +60,6 @@ class CreateUserView(generics.CreateAPIView):
             'access': str(refresh.access_token),
             'user': response.data
         })
-
 
 class LoginView(APIView):
     permission_classes = [permissions.AllowAny]
@@ -78,7 +90,6 @@ class LoginView(APIView):
 
         return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-
 class CarrierProfileDetailView(generics.RetrieveUpdateAPIView):
     queryset = CarrierProfile.objects.all()
     serializer_class = CarrierProfileSerializer
@@ -90,7 +101,6 @@ class BrokerProfileDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = BrokerProfileSerializer
     lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated, IsBrokerOwner]
-
 
 class LoadListCreateView(generics.ListCreateAPIView):
     queryset = Load.objects.all()
@@ -110,7 +120,6 @@ class LoadDetailView(generics.RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
     permission_classes = [permissions.IsAuthenticated]
 
-
 class OfferListCreateView(generics.ListCreateAPIView):
     queryset = Offer.objects.all()
     serializer_class = OfferSerializer
@@ -127,4 +136,16 @@ class OfferDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Offer.objects.all()
     serializer_class = OfferSerializer
     lookup_field = 'id'
-    permission_classes = [permissions.IsAuthenticated,IsCarrierOfferOwner]
+    permission_classes = [permissions.IsAuthenticated, IsBrokerOrCarrierOwner]
+
+    def destroy(self, request, *args, **kwargs):
+        offer = self.get_object()
+
+        # Only allow the carrier who created the offer to delete it
+        if hasattr(request.user, 'carrier_profile') and offer.carrier == request.user.carrier_profile:
+            return super().destroy(request, *args, **kwargs)
+
+        return Response(
+            {"detail": "You do not have permission to delete this offer."},
+            status=status.HTTP_403_FORBIDDEN
+        )

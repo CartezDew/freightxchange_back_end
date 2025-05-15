@@ -29,8 +29,6 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
         model = BrokerProfile
         fields = '__all__'
 
-
-
 class OfferSerializer(serializers.ModelSerializer):
     carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
     broker_company = serializers.SerializerMethodField()
@@ -38,11 +36,18 @@ class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = Offer
         fields = '__all__'
-        read_only_fields = ['carrier']
+        read_only_fields = ['carrier', 'submitted_at', 'carrier_name', 'broker_company']
 
     def get_broker_company(self, obj):
-        # Traverse: Offer -> Load -> Broker -> company_name
         return obj.load.broker.company_name if obj.load and obj.load.broker else None
+
+    def validate(self, data):
+        # Ensure a declined offer must have a reason
+        if data.get('status') == 'declined' and not data.get('declined_reason'):
+            raise serializers.ValidationError({
+                'declined_reason': 'A declined reason must be provided when status is declined.'
+            })
+        return data
 
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
