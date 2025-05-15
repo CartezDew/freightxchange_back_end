@@ -33,11 +33,16 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
 
 class OfferSerializer(serializers.ModelSerializer):
     carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
+    broker_company = serializers.SerializerMethodField()
 
     class Meta:
         model = Offer
         fields = '__all__'
         read_only_fields = ['carrier']
+
+    def get_broker_company(self, obj):
+        # Traverse: Offer -> Load -> Broker -> company_name
+        return obj.load.broker.company_name if obj.load and obj.load.broker else None
 
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
