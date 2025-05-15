@@ -29,16 +29,22 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
         model = BrokerProfile
         fields = '__all__'
 
+
+
+class OfferSerializer(serializers.ModelSerializer):
+    carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
+
+    class Meta:
+        model = Offer
+        fields = '__all__'
+        read_only_fields = ['carrier']
+
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
+    offers = OfferSerializer(many=True, read_only=True)
 
     class Meta:
         model = Load
         fields = '__all__'
         read_only_fields = ['broker']
 
-class OfferSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Offer
-        fields = '__all__'
-        read_only_fields = ['carrier']
