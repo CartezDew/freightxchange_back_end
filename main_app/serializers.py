@@ -32,11 +32,12 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
 class OfferSerializer(serializers.ModelSerializer):
     carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
     broker_company = serializers.SerializerMethodField()
+    rate = serializers.DecimalField(source='load.rate', max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = Offer
         fields = '__all__'
-        read_only_fields = ['carrier', 'submitted_at', 'carrier_name', 'broker_company']
+        read_only_fields = ['carrier', 'submitted_at', 'carrier_name', 'broker_company', 'rate']
 
     def get_broker_company(self, obj):
         return obj.load.broker.company_name if obj.load and obj.load.broker else None
