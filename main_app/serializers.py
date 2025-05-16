@@ -32,10 +32,10 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
 class OfferSerializer(serializers.ModelSerializer):
     carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
     broker_company = serializers.SerializerMethodField()
-<<<<<<< Updated upstream
+
     rate = serializers.DecimalField(source='load.rate', max_digits=10, decimal_places=2, read_only=True)
-=======
->>>>>>> Stashed changes
+
+
 
     class Meta:
         model = Offer
