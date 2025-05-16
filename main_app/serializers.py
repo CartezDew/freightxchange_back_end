@@ -32,7 +32,10 @@ class BrokerProfileSerializer(serializers.ModelSerializer):
 class OfferSerializer(serializers.ModelSerializer):
     carrier_name = serializers.CharField(source='carrier.company_name', read_only=True)
     broker_company = serializers.SerializerMethodField()
+<<<<<<< Updated upstream
     rate = serializers.DecimalField(source='load.rate', max_digits=10, decimal_places=2, read_only=True)
+=======
+>>>>>>> Stashed changes
 
     class Meta:
         model = Offer
@@ -49,6 +52,10 @@ class OfferSerializer(serializers.ModelSerializer):
                 'declined_reason': 'A declined reason must be provided when status is declined.'
             })
         return data
+
+    def get_broker_company(self, obj):
+        # Traverse: Offer -> Load -> Broker -> company_name
+        return obj.load.broker.company_name if obj.load and obj.load.broker else None
 
 class LoadSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='broker.company_name', read_only=True)
